@@ -2,6 +2,7 @@ var fs = require("fs");
 var moment = require("moment");
 var get = require("./get").Get;
 var baseUrl = "https://api.github.com/repos/gaubee/blog/issues";
+var basePath = "../blog/";
 var data = {
 	state:"open",
 	creator:"gaubee"
@@ -23,7 +24,8 @@ function getTime(body){
 function endFunBase (data) {
 	var dataObj = eval(data);
 	var filesJSON = [];
-	var title,
+	var id,
+		title,
 		baseUrl,
 		comments_url,
 		labels,
@@ -36,6 +38,7 @@ function endFunBase (data) {
 		;
 	for(i = 0;i<Length;i+=1){
 		issues = dataObj[i];
+		id = issues.id;
 		title = issues.title;
 		baseUrl = issues.html_url;
 		comments_url = issues.comments_url;
@@ -44,11 +47,12 @@ function endFunBase (data) {
 		created_at = getTime(body)||issues.created_at.split("T")[0];
 		updated_at = issues.updated_at.split("T")[0];
 
-		writeFile(fs,"../"+created_at+"/",title,body,function(fs,filePath,fileName,data){
+		writeFile(fs,basePath+created_at+"/",title,body,function(fs,filePath,fileName,data){
 			console.log("in "+filePath+", the <"+fileName+"> write ok");
 		});
 
 		filesJSON[i] = {
+			id:id,
 			title:title,
 			baseUrl:baseUrl,
 			comments_url:comments_url,
@@ -57,7 +61,7 @@ function endFunBase (data) {
 			lastUpdatedTime:updated_at
 		}
 	}
-	writeFile(fs,"../","blog.json",JSON.stringify(filesJSON),function(fs,filePath,fileName,data){
+	writeFile(fs,basePath,"blog.json",JSON.stringify(filesJSON),function(fs,filePath,fileName,data){
 		console.log("blog json is ok");
 	});
 }
