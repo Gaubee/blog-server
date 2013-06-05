@@ -47,7 +47,18 @@ function endFunBase (data) {
 		created_at = getTime(body)||issues.created_at.split("T")[0];
 		updated_at = issues.updated_at.split("T")[0];
 
-		writeFile(fs,basePath+created_at+"/",title,body,function(fs,filePath,fileName,data){
+		issues = {
+			id:id,
+			title:title,
+			baseUrl:baseUrl,
+			comments_url:comments_url,
+			labels:labels,
+			content:body,
+			filePath:created_at,
+			lastUpdatedTime:updated_at
+		}
+
+		writeFile(fs,basePath+created_at+"/",title+".json",JSON.stringify(issues),function(fs,filePath,fileName,data){
 			console.log("in "+filePath+", the <"+fileName+"> write ok");
 		});
 
