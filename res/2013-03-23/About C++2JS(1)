@@ -1,0 +1,93 @@
+I have checked the [GUM](https://github.com/Gaubee/gum) project source code,the source code look like just a framework,can It work?I even can't see the runtime.
+I'm doing something similar now,C++ -> JavaScript.
+But I'm only familiar with javascript instead of C/C++.
+what make me trouble is the `function(js)` and `eval(js)`.
+In my opinion the eval(js) must be treated as a separate module.Maybe I should implement it by  V8 plug-in, but now I shelved it.
+
+According to my ideas, I have provided a set of grammar rules based on the C++,to simulate the various characteristics of JavaScript.
+For example:
+
+```
+//init
+CONTEXT* Context = new CONTEXT(new VAR("this",_object_)) ;
+
+//var a = 'a';
+Context.initVariable(new VAR('a'),new VAR(_string_,"a"));
+
+//this.a = 'aa';
+Context.setVariable(
+	Context.getVariable("this").getProperty("a"),
+	new VAR(_string_,"aa")
+);
+```
+
+As you see ,It is base on Keyword parsing.
+But I still can not be given in the Syntax specification of `function(js)`.
+Maybe I should write like this:
+
+```javascript
+var function fn(argu_1,argu_2){
+    if(argu_1){
+        return argu_1;
+    }else if(argu_2){
+        //no return
+    }
+}
+```
+**Implementation of C++：**
+
+```c
+//In the vitro of the main(C++) function.
+VAR Proxy_XXX(VAR Self,...){//XXX Means unique code number
+    //Start Init Function
+    VAR* FnReturn = new VAR();//Anonymous and default is undefined
+    CONTEXT* Context = new Context(Self.Context);//the Context is link with Parent-Context.
+    VAR* Arguments = Context.initVariable("arguments",_object_);
+        //Begin bind arguments
+        va_list arg_ptr;
+        va_start(arg_ptr,Self);
+        VAR* Argu = va_arg(arg_ptr,VAR);
+        for(int i = 0 ; Argu.getType()!=_arguments_end_ ; i+=i){
+            if(Self.arguments_length<i){
+                Context.initVariable(Self.arguments_name[i],Argu);
+            }
+            Arguments.setProperty(string(i),Argu);
+            Argu = va_arg(arg_ptr,VAR);
+        }
+        va_end(arg_ptr);
+        //End bind arguments
+    //End Init
+
+    if(Context.getVariable("argu_1").toBoolean()){
+        FnReturn = Context.getVariable("argu_1");
+    }else if(Context.getVariable("argu_1").toBoolean()){
+
+    }
+
+    //Start Release memory
+    Context.ReleaseVariable();//
+    delete Context;
+    Arguments.Release();//Release will check references chain.If there is no cross-scope,Arguments will be delete;
+    //End Release memory
+    return FnReturn;
+}
+
+//In main(C++)
+//...
+Context.initVariable(new VAR("fn",_function_,Proxy_XXX)).setArgumentsName("argu_1","argu_2");
+//fn(0,1);
+Context.getVariable("fn").Run(new VAR(0),new VAR(1));
+//Maybe I can do better.But now I should do some of the conservative approach.
+//...
+```
+
+
+By the way,enumeration members are also dynamically generated.
+
+```javascript
+//Base variable type,something other native type will be add by required
+enum TYPE{_null_,_undefined_,_string_,_number_,
+    _boolean_,_array_,_object_,_function_,_arguments_end_};
+```
+
+**2013/3/23 14:36:15**
